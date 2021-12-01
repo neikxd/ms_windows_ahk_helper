@@ -32,12 +32,14 @@ Menu, TRAY, Icon, system_green.png, , 1
 FileDelete, %A_AppData%\uTorrent\*.torrent
 
 ; clean-up acestream cache
-; FileDelete, D:\_acestream_cache_\*
+FileDelete, C:\_acestream_cache_\*
 
 ; reset SyncBackPro
 ; f__run_reset_syncbackpro()
 
-
+; Brightness Variables
+brightness_increment := 10 ; < lower for a more granular change, higher for larger jump in brightness 
+current_brightness := f__get_current_brightness()
 
 
 
@@ -54,6 +56,16 @@ Return  ; At startup, only scripts above this will be processed *** *** *** *** 
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 
+; Brightness Hot Keys
+; F5::
+;     f__change_brightness( current_brightness -= brightness_increment )
+; return
+
+; F6::
+;     f__change_brightness( current_brightness += brightness_increment )
+; return
+
+
 F11::
     f__run_csgo_helper_play()
 return
@@ -61,7 +73,15 @@ return
 ; and WinExist("ahk_exe RazerCortex.exe")
 +F11::
     if (WinExist("ahk_exe steam.exe")) {
-        f__play_csgo_game()
+        if (!is_qc35_connected()) {
+            MsgBox, 4,, Bose QC35 not connected. Continue?
+            IfMsgBox Yes
+                f__play_csgo_game()
+            else
+                return
+        } else {
+            f__play_csgo_game()
+        }
     } else {
     	f__open_steam()
         ; if (!WinExist("ahk_exe steam.exe")) {
@@ -175,6 +195,16 @@ f__play_csgo_game() {
     ; Case "play":
     ;     f__run_csgo_helper_play()
     ; }
+
+    ; Set Max Screen Brightness
+    global current_brightness
+    current_brightness := f__get_current_brightness()
+    f__change_brightness(100)
+
+    ; Mute system volume if Bose QC35 not connected
+    if (!is_qc35_connected()) {
+        f__mute_system_volume()
+    }
 }
 
 f__quit_csgo_game() {
@@ -184,6 +214,18 @@ f__quit_csgo_game() {
     ; Send, {Ctrl Down}{Alt Down}{r Down}{r Up}{Alt Up}{Ctrl Up}
     ; close csgo_helper
     f__close_csgo_helper()
+    ; Restore Brightness
+    global current_brightness
+    f__change_brightness(current_brightness)
+}
+
+is_qc35_connected() {
+    RegRead, qc35_state, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Windows\CurrentVersion\MMDevices\Audio\Capture\{39b5abda-5764-455f-a3ee-2a054abff9f4}, DeviceState
+    if (qc35_state == 1) {
+        return True
+    } else {
+        return False
+    }
 }
 
 f__mute_system_volume() {
@@ -241,6 +283,24 @@ f__toggle_suspend() {
 
 f__reload() {
     Reload
+}
+
+; Brightness
+f__change_brightness( ByRef brightness := 50, timeout = 1 ) {
+    if ( brightness > 100 ) {
+        brightness := 100
+    } else if ( brightness < 0 ) {
+        brightness := 0
+    }
+
+    For property in ComObjGet( "winmgmts:\\.\root\WMI" ).ExecQuery( "SELECT * FROM WmiMonitorBrightnessMethods" )
+        property.WmiSetBrightness( timeout, brightness )    
+}
+
+f__get_current_brightness() {
+    For property in ComObjGet( "winmgmts:\\.\root\WMI" ).ExecQuery( "SELECT * FROM WmiMonitorBrightness" )
+        currentBrightness := property.CurrentBrightness 
+    return currentBrightness
 }
 
 /*
