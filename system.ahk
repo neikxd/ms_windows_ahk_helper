@@ -144,6 +144,13 @@ f__toggle_unikey() {
     } else Run, "C:\Users\Kien Dang\Documents\system\uniKey\UniKeyNT.exe"
 }
 
+f__close_unikey() {
+    if WinExist("ahk_exe UniKeyNT.exe") {
+        WinClose, ahk_exe UniKeyNT.exe
+        WinClose, ahk_exe UniKeyNT.exe
+    }
+}
+
 ; f__run_csgo_helper_release() {
 ;     Run, "D:\Devs\projects\csgo_helper\_release\v0.3.8.5\csgo_helper.exe"
 ; }
@@ -195,6 +202,9 @@ f__play_csgo_game() {
     ; Case "play":
     ;     f__run_csgo_helper_play()
     ; }
+
+    ; Close UniKeyNT
+    f__close_unikey()
 
     ; Set Max Screen Brightness
     global current_brightness
