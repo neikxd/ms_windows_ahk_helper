@@ -75,13 +75,10 @@ return
     if (WinExist("ahk_exe steam.exe")) {
         if (!is_qc35_connected()) {
             MsgBox, 4,, Bose QC35 not connected. Continue?
-            IfMsgBox Yes
-                f__play_csgo_game()
-            else
+            IfMsgBox No
                 return
-        } else {
-            f__play_csgo_game()
         }
+        f__play_csgo_game()
     } else {
     	f__open_steam()
         ; if (!WinExist("ahk_exe steam.exe")) {
