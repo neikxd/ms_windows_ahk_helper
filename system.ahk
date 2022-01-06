@@ -65,6 +65,13 @@ Return  ; At startup, only scripts above this will be processed *** *** *** *** 
 ;     f__change_brightness( current_brightness += brightness_increment )
 ; return
 
+; +F10::
+;     if WinExist("ahk_exe Audials.exe") {
+;         f__close_audials()
+;     } else {
+;         f__open_audials()
+;     }
+; Return
 
 F11::
     f__run_csgo_helper_play()
@@ -74,6 +81,8 @@ return
 +F11::
     if (WinExist("ahk_exe steam.exe")) {
         if (!is_qc35_connected()) {
+            f__mute_system_volume()
+
             MsgBox, 4,, Bose QC35 not connected. Continue?
             IfMsgBox No
                 return
@@ -92,6 +101,11 @@ return
 
 F12::
     f__close_csgo_helper()
+
+    ; Mute system volume if Bose QC35 not connected
+    if (!is_qc35_connected()) {
+        f__mute_system_volume()
+    }
 return
 
 +F12::
@@ -129,6 +143,27 @@ return
 /* Functions
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
+
+f__open_audials() {
+    Run, "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Audials.lnk"
+    SetTimer, close_audials_updater, 200
+}
+
+f__close_audials() {
+    WinClose, ahk_exe Audials.exe
+    SetTimer, close_audials_updater, 200
+}
+
+close_audials_updater:
+    f__close_audials_updater()
+Return
+
+f__close_audials_updater() {
+    if WinExist("Audials Update Center") {
+        WinClose
+        SetTimer, close_audials_updater, Off
+    }
+}
 
 ; f__run_reset_syncbackpro() {
 ;     Run, "D:\System\reset_SyncBack_Pro.cmd"
